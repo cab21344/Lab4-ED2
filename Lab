@@ -1,0 +1,68 @@
+#include <Arduino.h>
+
+#define pwmChannel 0 // canal para el pwm del servo
+#define ledRChannel 1 // canal 1 para el rojo
+#define ledGChannel 2 // canal 2 para el verde
+#define ledBChannel 3 // canal 3 para el azul
+#define freqPWM 5000 // frecuencia en Hz
+
+const int ledB = 27; // pin led blue
+const int ledG = 26; // pin led green
+const int ledR = 25; // pin led red
+
+const int boton1 = 32; // pin boton1
+const int boton2 = 35; // pin boton2
+
+volatile uint8_t contador1 = 1; // contador para botón 1
+volatile int brillo = 0;
+
+int sumar = 1; // sumar para el contador
+
+void setup() {
+  Serial.begin(115200);
+ 
+  pinMode(boton1, INPUT_PULLUP); // boton como entrada con resistencia pull-up
+  pinMode(boton2, INPUT_PULLUP); // boton como entrada con resistencia pull-up
+  pinMode(ledB, OUTPUT); // led blue como salida
+  pinMode(ledR, OUTPUT); // led red como salida
+  pinMode(ledG, OUTPUT); // led green como salida
+}
+
+void loop() {
+  // PARTE BOTON 1 *************************************************************
+  if(digitalRead(boton1) == LOW){ // Cambiado a LOW para considerar resistencia pull-up
+    contador1++;
+    if(contador1 > 3){
+      contador1 = 1;
+    }
+    delay(500); //debounce
+  }
+
+  // PARTE BOTON 2 *************************************************************
+  if(digitalRead(boton2) == LOW){
+    brillo += 51;
+    if (brillo > 255){
+      brillo = 0;
+   }
+   delay(500); //debounce
+  }
+  // Control de LEDs según contador1
+  if(contador1 == 1){
+    analogWrite(ledR, brillo);
+    analogWrite(ledG, 0);
+    analogWrite(ledB, 0);
+  } else if(contador1 == 2){
+    analogWrite(ledR, 0);
+    analogWrite(ledB, 0);
+    analogWrite(ledG, brillo);
+  } else if(contador1 == 3){
+    analogWrite(ledR, 0);
+    analogWrite(ledB, brillo);
+    analogWrite(ledG, 0);
+  } else{
+    analogWrite(ledR, 0);
+    analogWrite(ledB, 0);
+    analogWrite(ledG, 0);
+  }
+}
+
