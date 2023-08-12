@@ -1,0 +1,130 @@
+#include <Arduino.h>
+#include <ESP32Servo.h>
+
+#define pwmChannel 0 // canal para el pwm del servo
+#define ledRChannel 1 // canal 1 para el rojo
+#define ledGChannel 2 // canal 2 para el verde
+#define ledBChannel 3 // canal 3 para el azul
+#define freqPWM 5000 // frecuencia en Hz
+
+//Pate 1 *******************************************************************************
+const int servo = 19; //pin del servo
+const int boton1 = 21; //pin boton1
+const int boton2 = 18; //pin boton2
+
+Servo myservo;
+
+int posicion = 90; //posición inicial
+int sumar = 10; //incremento o decremento de la posición
+
+//Pate 2 *******************************************************************************
+const int ledB = 27; // pin led blue
+const int ledG = 26; // pin led green
+const int ledR = 25; // pin led red
+
+const int boton3 = 32; // pin boton3
+const int boton4 = 35; // pin boton4
+
+volatile uint8_t contador1 = 1; // contador para botón 1
+volatile int brillo = 0;
+
+//Pate 3 *******************************************************************************
+int cambioLedServo3 = 0; //0: apagado; 1:rojo; 2:verde; 3:azul; 4:servo
+int cambioServo = 0;
+
+
+void setup() {
+  Serial.begin(115200);
+ 
+ //Pate 1 *******************************************************************************
+  myservo.attach(servo);
+  myservo.write(posicion);
+
+  pinMode(boton1, INPUT_PULLUP); //boton como entrada
+  pinMode(boton2, INPUT_PULLUP); //boton como entrada
+
+ //Pate 2 *******************************************************************************
+  pinMode(boton3, INPUT_PULLUP); // boton como entrada con resistencia pull-up
+  pinMode(boton4, INPUT_PULLUP); // boton como entrada con resistencia pull-up
+  pinMode(ledB, OUTPUT); // led blue como salida
+  pinMode(ledR, OUTPUT); // led red como salida
+  pinMode(ledG, OUTPUT); // led green como salida
+}
+
+void loop() {
+  delay(50);
+
+  // PARTE 2 - BOTON 3 *************************************************************
+  if(digitalRead(boton3) == LOW){ // Cambiado a LOW para considerar resistencia pull-up
+    contador1++; //que aumente el contador al siguiente número
+    if(contador1 > 4){ //que no se pase de 3
+      contador1 = 1;
+    }
+    delay(500); //debounce
+  }
+
+  // PARTE 2 - BOTON 4 *************************************************************
+  if(digitalRead(boton4) == LOW){
+    brillo += 51; //que aumenta la intensidad del brillo - 5 intensidades
+    if (brillo > 255){ //que no se pase del max (255)
+      brillo = 0;
+   }
+   delay(500); //debounce
+  }
+
+  // Parte 2 - Control de LEDs según contador1
+  if(contador1 == 1){ //que se encienda la led verde y el servo a 0º
+    analogWrite(ledR, 0);
+    analogWrite(ledG, brillo);
+    analogWrite(ledB, 0);
+    myservo.write(90); //Parte 3
+    delay(200);
+  }
+  
+  else if(contador1 == 2){ //que se encienda la led azul y el servo a 90º
+    analogWrite(ledR, 0);
+    analogWrite(ledB, brillo);
+    analogWrite(ledG, 0);
+    myservo.write(0); //Parte 3
+    delay(200);
+  } 
+  
+  else if(contador1 == 3){ //que se encienda la led roja y el servo a 180º
+    analogWrite(ledR, brillo);
+    analogWrite(ledB, 0);
+    analogWrite(ledG, 0);
+    myservo.write(180); //Parte 3
+    delay(200);
+    }
+    
+  //Pate 3 *********************************************************************************
+  else if(contador1 == 4){ //control automático del servo
+  analogWrite(ledR, 0);
+  analogWrite(ledG, 0);
+  analogWrite(ledB, 0);
+   //Pate 1 *******************************************************************************
+      if(digitalRead(boton1) == HIGH){ //ve si el boton 1 está presionado
+    posicion += 10; //suma la posicion
+    if(posicion > 180){ //mira que no se pase del límite
+      posicion = 180;
+    }
+    myservo.write(posicion);
+    delay(500);
+  }
+  if(digitalRead(boton2) == HIGH){ //ve si el boton 2 está presionado
+    posicion -= 10; //resta la posicion
+    if(posicion < 0){ //mira que no se pase del límite
+      posicion = 0;
+    }
+    myservo.write(posicion);
+    delay(500);
+  } 
+  } 
+  
+  else{
+    analogWrite(ledR, 0);
+    analogWrite(ledB, 0);
+    analogWrite(ledG, 0);
+  }
+}
+
