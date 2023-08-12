@@ -1,0 +1,49 @@
+#include <Arduino.h>
+#include <ESP32Servo.h>
+
+#define pwmChannel 0 //canal para el pwm del servo
+#define freqPWM 5000 //frecuencia en Hz
+
+const int servo = 19; //pin del servo
+const int boton1 = 5; //pin boton1
+const int boton2 = 18; //pin boton2
+const uint8_t led = 25;
+
+Servo myservo;
+
+int posicion = 90; //posición inicial
+int sumar = 10; //incremento o decremento de la posición
+
+void setup() {
+  Serial.begin(115200);
+  myservo.attach(servo);
+  myservo.write(posicion);
+
+  pinMode(boton1, INPUT_PULLUP); //boton como entrada
+  pinMode(boton2, INPUT_PULLUP); //boton como entrada
+  pinMode(led, OUTPUT);
+}
+
+void loop() {
+  if(digitalRead(boton1) == HIGH){ //ve si el boton 1 está presionado
+    posicion += sumar; //suma la posicion
+    if(posicion > 180){ //mira que no se pase del límite
+      posicion = 180;
+    }
+    myservo.write(posicion);
+    
+    delay(500);
+  }
+
+  digitalWrite(led,HIGH); 
+
+  if(digitalRead(boton2) == HIGH){ //ve si el boton 2 está presionado
+    posicion -= sumar; //resta la posicion
+    if(posicion < 0){ //mira que no se pase del límite
+      posicion = 0;
+    }
+    myservo.write(posicion);
+
+    delay(500);
+  }
+}
